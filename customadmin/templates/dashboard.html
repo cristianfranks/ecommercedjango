@@ -1,0 +1,229 @@
+{% extends 'layout.html' %} {% block content %}
+
+<div class="container-fluid">
+  <div class="d-sm-flex align-items-center justify-content-between">
+    <h1 class="h3 py-4">Dashboard</h1>
+  </div>
+
+  <div class="row">
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-primary shadow h-100 p-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col">
+              <div
+                class="text-xs font-weight-bold text-primary text-uppercase mb-1"
+              >
+                Total de usuarios registrados
+              </div>
+              <div class="h5 font-weight-bold text-gray-800">
+                {{total_users}}
+              </div>
+            </div>
+            <div class="col-auto">
+              <i class="fs-2 bi bi-people text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-success shadow h-100 p-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col">
+              <div
+                class="text-xs font-weight-bold text-success text-uppercase mb-1"
+              >
+                Total de pagos completados
+              </div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">
+                S/. {{orders_total_amount}}
+              </div>
+            </div>
+            <div class="col-auto">
+              <i class="fs-2 bi bi-currency-dollar text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-info shadow h-100 p-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col">
+              <div
+                class="text-xs font-weight-bold text-info text-uppercase mb-1"
+              >
+                Total de ordenes
+              </div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">
+                {{total_orders}}
+              </div>
+            </div>
+            <div class="col-auto">
+              <i class="fs-2 bi bi-receipt text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-warning shadow h-100 p-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col">
+              <div
+                class="text-xs font-weight-bold text-warning text-uppercase mb-1"
+              >
+                Ordenes nuevas
+              </div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">
+                {{new_orders}}
+              </div>
+            </div>
+            <div class="col-auto">
+              <i class="fs-2 bi bi-journal text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-xl-4 col-lg-5">
+      <div class="card shadow mb-4">
+        <div class="card-header">
+          <h6 class="m-0 font-weight-bold text-primary">
+            Productos más vendidos
+          </h6>
+        </div>
+        <div class="card-body">
+          <canvas id="mostOrderedProductsChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-4 col-lg-5">
+      <div class="card shadow mb-4">
+        <div class="card-header">
+          <h6 class="m-0 font-weight-bold text-primary">
+            Clientes más recurrentes
+          </h6>
+        </div>
+        <div class="card-body">
+          <canvas id="usersWithMoreOrdersChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-4 col-lg-5">
+      <div class="card shadow mb-4">
+        <div class="card-header">
+          <h6 class="m-0 font-weight-bold text-primary">
+            Productos mejor calificados
+          </h6>
+        </div>
+        <div class="card-body">
+          <canvas id="bestRatedProducts"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+    let mostOrderedProductsChartCtx = document.getElementById("mostOrderedProductsChart");
+    const mostOrderedProducts = {{ most_ordered_products|safe }};
+
+    const mostOrderedProductsLabels = mostOrderedProducts.map(product => product.product__product_name);
+    const mostOrderedProductsData = mostOrderedProducts.map(product => product.total_quantity);
+
+    const mostOrderedProductsChartData = {
+      labels: mostOrderedProductsLabels,
+      datasets: [
+        {
+          label: "Cantidad",
+          data: mostOrderedProductsData,
+          backgroundColor: [
+            "rgb(255, 99, 132)",
+            "rgb(255, 159, 64)",
+            "rgb(255, 205, 86)",
+            "rgb(75, 192, 192)",
+            "rgb(54, 162, 235)",
+          ],
+          hoverOffset: 4,
+        },
+      ],
+    };
+    const mostOrderedProductsConfig = {
+      type: "pie",
+      data: mostOrderedProductsChartData,
+    };
+    new Chart(mostOrderedProductsChartCtx, mostOrderedProductsConfig);
+
+    let usersWithMoreOrdersChartCtx = document.getElementById("usersWithMoreOrdersChart").getContext('2d');
+    const usersWithMoreOrders = {{ users_with_most_orders|safe }};
+
+    const usersWithMoreOrdersLabels = usersWithMoreOrders.map(user => `${user.user__first_name} ${user.user__last_name}`);
+    const usersWithMoreOrdersData = usersWithMoreOrders.map(user => user.order_count);
+
+    const usersWithMoreOrdersChartData = {
+      labels: usersWithMoreOrdersLabels,
+      datasets: [
+        {
+          label: "Número de ordenes",
+          data: usersWithMoreOrdersData,
+          backgroundColor: [
+            "rgb(255, 99, 132)",
+            "rgb(255, 159, 64)",
+            "rgb(255, 205, 86)",
+            "rgb(75, 192, 192)",
+            "rgb(54, 162, 235)",
+          ],
+          hoverOffset: 4,
+        },
+      ],
+    };
+    const usersWithMoreOrdersChartConfig = {
+      type: "bar",
+      data: usersWithMoreOrdersChartData,
+      options: {
+        indexAxis: 'y',
+  }
+    };
+    new Chart(usersWithMoreOrdersChartCtx, usersWithMoreOrdersChartConfig);
+
+    let bestRatedProductsCtx = document.getElementById("bestRatedProducts").getContext('2d');
+    const bestRatedProducts = {{ best_rated_products|safe }};
+
+    const bestRatedProductsLabels = bestRatedProducts.map(product => product.product__product_name);
+    const bestRatedProductsData = bestRatedProducts.map(product => product.average_rating);
+    const bestRatedProductsChartData = {
+      labels: bestRatedProductsLabels,
+      datasets: [
+        {
+          label: "Calificación",
+          data: bestRatedProductsData,
+          backgroundColor: [
+            "rgb(255, 99, 132)",
+            "rgb(255, 159, 64)",
+            "rgb(255, 205, 86)",
+            "rgb(75, 192, 192)",
+            "rgb(54, 162, 235)",
+          ],
+          hoverOffset: 4,
+        },
+      ],
+    };
+    const bestRatedProductsChartConfig = {
+      type: "bar",
+      data: bestRatedProductsChartData,
+    };
+    new Chart(bestRatedProductsCtx, bestRatedProductsChartConfig);
+</script>
+{% endblock %}

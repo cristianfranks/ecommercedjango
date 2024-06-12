@@ -1,0 +1,83 @@
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div id="existingVariations" value = "{{ existing_variations }}" style="display:none;"></div>
+    <div class="mb-3">
+      <label for="product_name" class="form-label">Nombre</label>
+      <input type="text" class="form-control" id="product_name" name="product_name" value="{{ form.instance.product_name }}" required>
+    </div>
+    <div class="mb-3">
+      <label for="slug" class="form-label">Slug</label>
+      <input type="text" class="form-control" id="slug" name="slug" value="{{ form.instance.slug }}" required>
+    </div>
+    <div class="mb-3">
+      <label for="description" class="form-label">Descripción</label>
+      <textarea class="form-control" id="description" name="description" rows="3" required>{{ form.instance.description }}</textarea>
+    </div>
+    <div class="mb-3">
+      <label for="price" class="form-label">Precio</label>
+      <input type="number" class="form-control" id="price" name="price" value="{{ form.instance.price }}" required>
+    </div>
+    <div class="mb-3">
+      <label for="stock" class="form-label">Stock</label>
+      <input type="number" class="form-control" id="stock" name="stock" value="{{ form.instance.stock }}" required>
+    </div>
+    <div class="mb-3">
+      <label for="is_available" class="form-label">Disponibilidad</label>
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="is_available" name="is_available" {% if form.instance.is_available %}checked{% endif %}>
+            <label class="form-check-label" for="is_available">Disponible</label>
+        </div>
+    </div>
+    <div class="mb-3">
+      <label for="category" class="form-label">Categoría</label>
+      <select class="form-select" id="category" name="category" required>
+        {% for category in categories %}
+        <option value="{{ category.pk }}" {% if form.category.value == category.pk %}selected{% endif %}>{{ category.category_name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="mb-3">
+        <label for="images" class="form-label">Imagen</label>
+        <input type="file" class="form-control" id="images" name="images" required>
+    </div>
+    <div id="image_preview" class="mb-3">
+      {% if form.instance.images %}
+        <img src="{{ form.instance.images.url }}" style="max-width: 200px; margin: 10px;">
+      {% endif %}
+    </div>
+    <div class="mb-3">
+        <label for="gallery_images" class="form-label">Galería</label>
+        <input type="file" class="form-control" id="gallery_image_input" name="gallery_image_input">
+        <div id="existing_gallery_preview" class="d-sm-flex flex-wrap align-items-center mb-3">
+          {% for image in product_gallery %}
+            <div class="existing-image col-4" data-image-id="{{ image.id }}">
+              <img src="{{ image.image.url }}" style="max-width: 100px; margin: 10px;">
+              <button type="button" class="btn btn-danger btn-sm" data-toggle="modal" data-target="#deleteGalleryModal" onclick="openDeleteGalleryModal({{ image.id }})">Eliminar</button>
+            </div>
+          {% endfor %}
+        </div>
+        <div id="gallery_preview" class="d-sm-flex flex-wrap align-items-center mb-3"></div>
+
+        <div class="d-sm-flex align-items-center justify-content-between mb-3">
+          <div>
+            <label for="variation_category" class="form-label">Tipo de variante</label>
+            <select class="form-select" id="variation_category" name="variation_category">
+                {% for choice in variation_form.variation_category.field.choices %}
+                <option value="{{ choice.0 }}">{{ choice.1 }}</option>
+                {% endfor %}
+            </select>
+          </div>
+          <div>
+              <label for="variation_value" class="form-label">Variante</label>
+              <input type="text" class="form-control" id="variation_value" name="variation_value">
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="is_active" name="is_active" {% if form.instance.is_active %}checked{% endif %}>
+            <label class="form-check-label" for="is_active">Activo</label>
+          </div>
+          <button type="button" class="btn btn-info" onclick="addVariation()">Agregar variante</button>
+        </div>
+    <p class="fs-4 mb-3">Variantes</p>
+    <div class="d-sm-flex flex-wrap align-items-center mb-3" id="variation_list"></div>
+  </div>
+</form>

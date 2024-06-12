@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container-fluid p-4">
+    <h1 class="h3 py-4">Detalles de la Orden #{{ order.order_number }}</h1>
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Cliente: {{ order.first_name }} {{ order.last_name }}</h5>
+            <p class="card-text">Teléfono: {{ order.phone }}</p>
+            <p class="card-text">E-mail: {{ order.email }}</p>
+            <p class="card-text">Ciudad: {{ order.city }}</p>
+            <p class="card-text">Dirección: {{ order.address }}</p>
+            <p class="card-text">Total: {{ order.order_total }}</p>
+            <p class="card-text">Impuestos: {{ order.tax }}</p>
+            <p class="card-text">Estado: {{ order.get_status_display }}</p>
+            <p class="card-text">Pagado:
+                {% if order.is_ordered %}
+                    <i class="bi bi-check-circle text-success"></i>
+                {% else %}
+                    <i class="bi bi-x-circle text-danger"></i>
+                {% endif %}
+            </p>
+        </div>
+    </div>
+
+    <h2 class="h4 py-2">Productos en la Orden</h2>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Producto</th>
+                <th>Variaciones</th>
+                <th>Cantidad</th>
+                <th>Precio Unitario</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order_product in order_products %}
+            <tr>
+                <td>{{ order_product.product.product_name }}</td>
+                <td>
+                    {% for variation in order_product.variation.all %}
+                        {{ variation }}{% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                </td>
+                <td>{{ order_product.quantity }}</td>
+                <td>{{ order_product.product_price }}</td>
+                <td>{{ order_product.total }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{% url 'my_orders' %}?status=New" class="btn btn-secondary mt-3">Volver a la lista de órdenes</a>
+</div>
+{% endblock %}

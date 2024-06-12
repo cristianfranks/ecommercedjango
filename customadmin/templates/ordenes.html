@@ -1,0 +1,153 @@
+{% extends 'layout.html' %}
+{% block content %}
+
+<div class="container-fluid p-4">
+  <div class="d-sm-flex align-items-center justify-content-between">
+    <h1 class="h3 py-4">Lista de órdenes</h1>
+    <form method="GET" class="d-flex">
+      <input type="text" name="search" class="form-control me-2" placeholder="Buscar por número de orden o email" value="{{ request.GET.search }}">
+      <button type="submit" class="btn btn-primary me-2">Buscar</button>
+      <a href="{% url 'admin_orders' %}" class="btn btn-secondary me-2">Refrescar</a>
+      <a href="{% url 'download_orders_excel' %}?status={{ status }}" class="btn btn-success">Descargar Excel</a>
+    </form>
+  </div>
+
+  <form method="GET">
+    <div class="row">
+      <select name="status" class="form-select" onchange="this.form.submit()">
+        <option value="Completed" {% if status == 'Completed' %}selected{% endif %}>Completados</option>
+        <option value="New" {% if status == 'New' %}selected{% endif %}>Por Completar</option>
+      </select>
+    </div>
+  </form>
+
+  <table class="table table-bordered mt-3">
+    <thead>
+      <tr>
+        <th>Número de orden</th>
+        <th>Nombre</th>
+        <th>Teléfono</th>
+        <th>E-mail</th>
+        <th>Ciudad</th>
+        <th>Total</th>
+        <th>Impuestos</th>
+        <th>Estado</th>
+        <th>Pagado</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for order in orders.object_list %}
+      <tr>
+        <td>{{ order.order_number }}</td>
+        <td>{{ order.first_name }}</td>
+        <td>{{ order.phone }}</td>
+        <td>{{ order.email }}</td>
+        <td>{{ order.city }}</td>
+        <td>{{ order.order_total }}</td>
+        <td>{{ order.tax }}</td>
+        <td>{{ order.get_status_display }}</td>
+        <td>
+          {% if order.is_ordered %}
+          <i class="bi bi-check-circle text-success"></i>
+          {% else %}
+          <i class="bi bi-x-circle text-danger"></i>
+          {% endif %}
+        </td>
+        <td>
+          <button
+            class="btn btn-info"
+            onclick="window.location.href='{% url 'view_order' order.id %}'"
+          >
+            Ver Orden
+          </button>
+          {% if status == "New" %}
+          <button
+            class="btn btn-success"
+            data-toggle="modal"
+            data-target="#completeOrderModal"
+            onclick="openCompleteOrderModal({{ order.id }})"
+          >
+            Completar orden
+          </button>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% if orders.has_other_pages %}
+  <nav aria-label="Page navigation">
+    <ul class="pagination">
+      {% if orders.has_previous %}
+      <li class="page-item">
+        <a class="page-link" href="?page={{ orders.previous_page_number }}{% if status %}&status={{ status }}{% endif %}" aria-label="Previous">
+          <span aria-hidden="true">&laquo;</span>
+        </a>
+      </li>
+      {% endif %}
+      {% for num in orders.paginator.page_range %}
+      {% if orders.number == num %}
+      <li class="page-item active"><a class="page-link" href="#">{{ num }}</a></li>
+      {% elif num > orders.number|add:-3 and num < orders.number|add:3 %}
+      <li class="page-item"><a class="page-link" href="?page={{ num }}{% if status %}&status={{ status }}{% endif %}">{{ num }}</a></li>
+      {% endif %}
+      {% endfor %}
+      {% if orders.has_next %}
+      <li class="page-item">
+        <a class="page-link" href="?page={{ orders.next_page_number }}{% if status %}&status={{ status }}{% endif %}" aria-label="Next">
+          <span aria-hidden="true">&raquo;</span>
+        </a>
+      </li>
+      {% endif %}
+    </ul>
+  </nav>
+  {% endif %}
+</div>
+
+<!-- Complete Order Modal -->
+<div class="modal fade" id="completeOrderModal" tabindex="-1" aria-labelledby="completeOrderModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="completeOrderModalLabel">Completar Orden</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        ¿Estás seguro de que quieres completar esta orden?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-success" onclick="completeOrder()">Completar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function openCompleteOrderModal(orderId) {
+    // Guarda el orderId en una variable global
+    window.currentOrderId = orderId;
+  }
+
+  function completeOrder() {
+    fetch(`/admin/complete_order/${window.currentOrderId}/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': '{{ csrf_token }}'
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        // Recargar la página o actualizar la interfaz para reflejar el cambio
+        location.reload();
+      } else {
+        alert('Error al completar la orden');
+      }
+    });
+  }
+</script>
+
+{% endblock %}
